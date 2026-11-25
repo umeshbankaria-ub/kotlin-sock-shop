@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sock Shop</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; color: #333; }
+        header { background: #333; color: #fff; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .cart-btn { background: #4fbfa8; color: #fff; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        .card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .sock-icon { font-size: 60px; margin: 10px 0; }
+        .price { font-size: 1.3em; font-weight: bold; color: #4fbfa8; margin: 10px 0; }
+        .tags { font-size: 0.8em; color: #777; margin-bottom: 15px; }
+        .add-btn { background: #4fbfa8; color: #fff; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; }
+        .add-btn:hover { background: #3da892; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>🧦 Sock Shop</h2>
+    <button class="cart-btn" onclick="showCart()">
+        🛒 <span id="cart-count">0</span> item(s) in cart
+    </button>
+</header>
+
+<div class="container">
+    <h3>Featured Socks</h3>
+    <div id="catalogue" class="grid">Loading socks...</div>
+</div>
+
+<script>
+    let currentCart = [];
+
+    function updateCartCount(items) {
+        currentCart = items;
+        document.getElementById('cart-count').innerText = items.length;
+    }
+
+    function showCart() {
+        const names = currentCart.map(s => `${s.name} ($${s.price.toFixed(2)})`).join('\n');
+        alert(currentCart.length ? `Your Cart:\n${names}` : 'Your cart is empty!');
+    }
+
+    function addToCart(sock) {
+        fetch('/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sock)
+        })
+        .then(res => res.json())
+        .then(items => updateCartCount(items));
+    }
+
+    // Load saved cart items from the Kotlin server when the page opens
+    fetch('/cart')
+        .then(res => res.json())
+        .then(items => updateCartCount(items));
+
+    fetch('/catalogue')
+        .then(res => res.json())
+        .then(socks => {
+            const container = document.getElementById('catalogue');
+            container.innerHTML = '';
+            socks.forEach(sock => {
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="sock-icon">🧦</div>
+                        <h4>${sock.name}</h4>
+                        <p>${sock.description}</p>
+                        <div class="tags">Tags: ${sock.tag.join(', ')}</div>
+                        <div class="price">$${sock.price.toFixed(2)}</div>
+                        <button class="add-btn" onclick='addToCart(${JSON.stringify(sock)})'>Add to cart</button>
+                    </div>
+                `;
+            });
+        });
+</script>
+
+</body>
+</html>
