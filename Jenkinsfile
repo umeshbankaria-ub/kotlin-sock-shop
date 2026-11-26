@@ -7,9 +7,19 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Run Tests') {
+        stage('Build Application') {
             steps {
-                sh 'chmod +x gradlew && ./gradlew test --no-daemon'
+                sh 'chmod +x gradlew && ./gradlew compileKotlin compileTestKotlin --no-daemon'
+            }
+        }
+        stage('Unit Tests (UT)') {
+            steps {
+                sh './gradlew test --no-daemon'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
+                }
             }
         }
         stage('Build Docker Image') {
@@ -29,6 +39,14 @@ pipeline {
             steps {
                 sh 'sudo /usr/local/bin/k3s kubectl rollout restart deployment/kotlin-sock-shop'
                 sh 'sudo /usr/local/bin/k3s kubectl rollout status deployment/kotlin-sock-shop'
+            }
+        }
+    }
+
+    post {
+        success {
+            withCredentials([usernamePassword(credentialsId: 'github-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                sh 'if [ -n "$CHANGE_ID" ]; then curl -s -X PUT -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github+json" "https://github.com" -d "{\"merge_method\":\"merge\"}"; fi'
             }
         }
     }
