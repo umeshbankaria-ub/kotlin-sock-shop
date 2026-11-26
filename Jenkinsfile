@@ -45,12 +45,8 @@ pipeline {
 
     post {
         success {
-            script {
-                if (env.CHANGE_ID) {
-                    withCredentials([usernamePassword(credentialsId: 'github-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-                        sh "curl -s -X PUT -H 'Authorization: token ${GIT_TOKEN}' -H 'Accept: application/vnd.github+json' https://github.com{CHANGE_ID}/merge -d '{"merge_method":"merge"}'"
-                    }
-                }
+            withCredentials([usernamePassword(credentialsId: 'github-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                sh 'if [ -n "$CHANGE_ID" ]; then curl -s -X PUT -H "Authorization: token $GIT_TOKEN" -H "Accept: application/vnd.github+json" "https://github.com" -d "{\"merge_method\":\"merge\"}"; fi'
             }
         }
     }
