@@ -1,6 +1,7 @@
 package com.example.demo
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -11,6 +12,16 @@ class SockShopUnitTests {
         val app = DemoApplication()
         assertEquals("Hello World!", app.hello())
         assertEquals("Hello Umesh!", app.hello("Umesh"))
+    }
+
+    @Test
+    fun `catalogue returns all socks and finds by id`() {
+        val catalogueController = CatalogueController()
+        val allSocks = catalogueController.getAllSocks()
+
+        assertEquals(3, allSocks.size)
+        assertEquals("Holy Socks", catalogueController.getSockById("1")?.name)
+        assertNull(catalogueController.getSockById("999"))
     }
 
     @Test
