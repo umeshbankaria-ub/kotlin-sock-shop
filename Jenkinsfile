@@ -7,9 +7,19 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Run Tests') {
+        stage('Build Application') {
             steps {
-                sh 'chmod +x gradlew && ./gradlew test --no-daemon'
+                sh 'chmod +x gradlew && ./gradlew compileKotlin compileTestKotlin --no-daemon'
+            }
+        }
+        stage('Unit Tests (UT)') {
+            steps {
+                sh './gradlew test --no-daemon'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'build/test-results/test/*.xml'
+                }
             }
         }
         stage('Build Docker Image') {
